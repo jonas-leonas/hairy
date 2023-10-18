@@ -18,6 +18,8 @@ if(process.env.NODE_ENV !== 'production'){
 const PORT = process.env.PORT || 3000;
 const CONNECTION =  process.env.CONNECTION;
 
+
+//local data
 const customers = [
     {
         "name": "Caleb",
@@ -34,22 +36,52 @@ const customers = [
 ]
 
 const customer = new Customer({
-    name: 'caleb',
-    industry: 'marketing'
+    name: 'John',
+    industry: 'finance'
 });
+
+//customer.save();
 
 app.get('/', (req, res) => {
-    res.send(customer);
+    res.send("welcome message");
 });
-app.get('/api/customers', (req, res) => {
-    res.send({"customers": customers});
+app.get('/api/customers',  async (req, res) => {
+    console.log(await mongoose.connection.db.listCollections().toArray());
+    try{
+        const result = await Customer.find();
+        res.json({"customers": result});
+    } catch(e){
+        res.status(500).json({error: e.message});
+    }
 
 });
 
-app.post('/api/customers', (req, res) => {
+//accepting passed parameter like f.x id
+app.get('/api/customers/:id/:test', async(req,res) => {
+    res.json({
+        requestParams: req.params,
+        requestQuery: req.query})
+});
+
+//add data to database
+app.post('/api/customers', async (req, res) => {
     console.log(req.body);
-    res.send(req.body);
-});
+    const customer = new Customer(req.body);
+    try{ 
+        await customer.save();
+        res.status(201).json({customer});
+
+    } catch(e) {
+        res.status(400).json({error: e.message});
+    }
+
+
+    });
+
+    //  req.body)
+    //     customer.save();
+    //     res.status(201).json({customer})
+
 
 app.post('/', (req, res) => {
     res.send('This is a post request!');
